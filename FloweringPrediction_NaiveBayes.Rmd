@@ -1,0 +1,22 @@
+---
+title: "Flowering Type Prediction with Naive Bayes"
+author: "Sandra Fuertes Perez"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Bayes algorithm
+
+The Naive Bayes algorithm is based on the Bayes' theorem of conditional probabilities, used to predict the likelihood that an event belongs to a certain categories based on past observed events and accumulated probabilities of those features observed for each of the categories considered. It performs quite well on text-based classification problems, despite making some 'naive' assumptions about the data, such as assuming independence and equal importance of all features.
+
+| **Strengths** | **Weakness** |
+|-------------------------------------|-----------------------------------|
+| Simple, fast, and very effective | Assumes independence and equal importance of features, often incorrect |
+| Performs well with noise and NAs | Not ideal with too many numerical features |
+| Works well with small datasets, while still working well with larger ones | Estimated probabilities less reliable than predicted classes |
+| Easy to obtain estimated probabilities for predictions |  |
+
