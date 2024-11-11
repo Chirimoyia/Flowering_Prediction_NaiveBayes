@@ -20,3 +20,122 @@ The Naive Bayes algorithm is based on the Bayes' theorem of conditional probabil
 | Works well with small datasets, while still working well with larger ones | Estimated probabilities less reliable than predicted classes |
 | Easy to obtain estimated probabilities for predictions |  |
 
+# Data import
+
+```{r}
+times <- read.csv("flowering_time.csv", header=FALSE, col.names="Days")
+str(times)
+```
+Transformation of 'times' to factor variable with two levels: slow and fast flowering.
+
+```{r}
+type_labels <- factor(times > 40,
+                levels = c(FALSE, TRUE),
+                labels = c("fast", "slow"))
+
+table(type_labels)
+```
+
+```{r}
+genotype <- read.csv("genotype.csv", header=FALSE, sep=",")
+
+# turn all numerical values to factors
+features <- apply(genotype, 
+                  MARGIN=2,
+                  FUN=factor,
+                  levels=c(0,1,2), 
+                  labels=c("HmD", "Ht", "HmR"))
+```
+
+# Divide datasets
+
+```{r}
+set.seed(1234)
+
+# extract train indices
+n <- nrow(times)
+train_indices <- sample(1:n, size = 2*n/3, replace=FALSE)
+
+# create train dataset and labels
+train_features <- features[train_indices, ]
+train_labels <- type_labels[train_indices]
+
+# create test dataset and labels
+test_features <- features[-train_indices, ]
+test_labels <- type_labels[-train_indices]
+```
+# Training model
+
+```{r, warning=FALSE}
+library(e1071)
+
+m0 <- naiveBayes(train_features, train_labels, laplace=0)
+m1 <- naiveBayes(train_features, train_labels, laplace=1)
+```
+
+# Predictions
+
+```{r}
+p0 <- predict(m0, test_features)
+p1 <- predict(m1, test_features)
+```
+
+# Evaluation
+
+```{r}
+library(caret)
+```
+
+```{r}
+# remove chisq and proportions
+# dive names to dimensions
+cM0 <- confusionMatrix(p0,
+                test_labels,
+                positive="slow",
+                dnn=c("Predicted", "Actual"))
+cM0
+```
+
+
+```{r}
+cM1 <- confusionMatrix(p1,
+                test_labels,
+                positive="slow",
+                dnn=c('predicted', 'actual'))
+cM1
+```
+
+
+```{r}
+performance = data.frame(accuracy = c(cM0$overall['Accuracy'],
+                        cM1$overall['Accuracy']),
+           sensitivity = c(cM0$byClass['Sensitivity'],
+                           cM1$byClass['Sensitivity']),
+           specificity = c(cM0$byClass['Specificity'],
+                           cM1$byClass['Specificity']),
+           precision = c(cM0$byClass['Precision'],
+                           cM1$byClass['Precision']),
+           F1 = c(cM0$byClass['F1'],
+                  cM1$byClass['F1']),
+           row.names = c("laplace = 0", "laplace = 1"))
+performance
+```
+
+# Curvas ROC
+
+```{r}
+library(ROCR)
+
+p0_raw <- predict(m0, test_features, type="raw")
+pred <- prediction(predictions=p0_raw[,2], labels=test_labels)
+perf <- performance(pred, measure="tpr", x.measure="fpr")
+plot(perf, main="ROC curve", col="red", lwd=3, colorize=TRUE)
+abline(a=0, b=1, lwd=2, lty=2)
+
+perf.auc <- performance(pred, measure="auc")
+```
+
+
+
+
+
